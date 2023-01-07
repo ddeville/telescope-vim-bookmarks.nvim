@@ -34,19 +34,25 @@ local function make_entry_from_bookmarks(opts)
 	opts = opts or {}
 
 	local displayer = entry_display.create({
-		separator = "|",
 		items = {
-			{ width = 100 },
 			{ remaining = true },
 		},
 	})
 
-	local make_display = function(entry)
+	local display_text = function(entry)
 		local cwd = vim.fn.expand(vim.loop.cwd())
-		local filename = Path:new(entry.filename):normalize(cwd) .. ":" .. entry.lnum
+		local text = Path:new(entry.filename):normalize(cwd) .. ":" .. entry.lnum
+
+		if entry.text ~= "" then
+			text = text .. "  -- (" .. entry.text .. ")"
+		end
+
+		return text
+	end
+
+	local make_display = function(entry)
 		return displayer({
-			filename,
-			entry.text,
+			display_text(entry),
 		})
 	end
 
@@ -55,7 +61,7 @@ local function make_entry_from_bookmarks(opts)
 			valid = true,
 
 			value = entry,
-			ordinal = entry.text,
+			ordinal = display_text(entry),
 			display = make_display,
 
 			filename = entry.filename,
