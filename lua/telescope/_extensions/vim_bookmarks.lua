@@ -17,22 +17,13 @@ local function get_bookmarks(files, opts)
 		for _, line in ipairs(vim.fn["bm#all_lines"](file)) do
 			local bookmark = vim.fn["bm#get_bookmark_by_line"](file, line)
 
-			local text = bookmark.annotation ~= "" and "Annotation: " .. bookmark.annotation or bookmark.content
-			if text == "" then
-				text = "(empty line)"
-			end
-
-			local only_annotated = opts.only_annotated or false
-
-			if not (only_annotated and bookmark.annotation == "") then
-				table.insert(bookmarks, {
-					filename = file,
-					lnum = tonumber(line),
-					col = 1,
-					text = text,
-					sign_idx = bookmark.sign_idx,
-				})
-			end
+			table.insert(bookmarks, {
+				filename = file,
+				lnum = tonumber(line),
+				col = 1,
+				text = bookmark.annotation or "",
+				sign_idx = bookmark.sign_idx,
+			})
 		end
 	end
 
@@ -43,7 +34,7 @@ local function make_entry_from_bookmarks(opts)
 	opts = opts or {}
 
 	local displayer = entry_display.create({
-		separator = " ",
+		separator = "|",
 		items = {
 			{ width = 100 },
 			{ remaining = true },
@@ -52,12 +43,10 @@ local function make_entry_from_bookmarks(opts)
 
 	local make_display = function(entry)
 		local cwd = vim.fn.expand(vim.loop.cwd())
-		local filename = Path:new(entry.filename):normalize(cwd)
+		local filename = Path:new(entry.filename):normalize(cwd) .. ":" .. entry.lnum
 		return displayer({
-			-- entry.text:gsub(".* | ", ""),
-			filename
-				.. ":"
-				.. entry.lnum,
+			filename,
+			entry.text,
 		})
 	end
 
